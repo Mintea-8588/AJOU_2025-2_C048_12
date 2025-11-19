@@ -4,7 +4,7 @@
 #define IN1 4
 #define IN2 3
 
-const int SPEED_MAX = 20;
+const int SPEED_MAX = 200;
 
 void setup()
 {
@@ -18,7 +18,7 @@ void moveForward()
   digitalWrite(IN1, HIGH);
   digitalWrite(IN2, LOW);
   analogWrite(ENA, SPEED_MAX);
-  delay(5000);
+  delay(1000);
 }
 
 void moveBackward()
@@ -26,7 +26,7 @@ void moveBackward()
   digitalWrite(IN1, LOW);
   digitalWrite(IN2, HIGH);
   analogWrite(ENA, SPEED_MAX);
-  delay(5000);
+  delay(1000);
 }
 
 void stop()
@@ -34,13 +34,14 @@ void stop()
   digitalWrite(IN1, HIGH);
   digitalWrite(IN2, HIGH);
   analogWrite(ENA, SPEED_MAX);
-  delay(5000);
+  delay(1000);
 }
 
 void loop()
 {
-  void moveForward();
-  void stop();
-  void moveBackward();
+  moveForward();
+  stop();
+  moveBackward();
+  stop();
 }
 

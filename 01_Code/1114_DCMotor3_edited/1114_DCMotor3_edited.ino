@@ -11,7 +11,7 @@
 
 
 // 속도 설정 (0~255) 
-const int SPEED_MAX = 20;
+const int SPEED_MAX = 255;
 
 
 void setup() 
@@ -42,7 +42,6 @@ void moveForward()
   // ENA/ENB 핀을 통해 모터 활성화 및 속도 설정
   analogWrite(ENA, SPEED_MAX);
   analogWrite(ENB, SPEED_MAX);
-  delay(1000);
 }
 
 void moveBackward()
@@ -58,7 +57,6 @@ void moveBackward()
   // ENA/ENB 핀을 통해 모터 활성화 및 속도 설정
   analogWrite(ENA, SPEED_MAX);
   analogWrite(ENB, SPEED_MAX);
-  delay(1000);
 }
 // 정지 = 우측 정지 + 좌측 정지 
 void stopMotors() 
@@ -72,7 +70,6 @@ void stopMotors()
   // ENA/ENB 핀을 최저치로 설저하여 전류를 차단 (과열 방지
   analogWrite(ENA, 0);
   analogWrite(ENB, 0);
-  delay(1000);
 }
 
 // 좌회전 = 우측 정회전 + 좌측 역회전 
@@ -89,7 +86,6 @@ void turnLeft()
   // ENA/ENB 핀을 통해 모터 활성화 및 속도 설정
   analogWrite(ENA, SPEED_MAX);
   analogWrite(ENB, SPEED_MAX);
-  delay(1000);
 }
 
 // 우회전 = 우측 역회전 + 좌측 정회전 
@@ -106,21 +102,28 @@ void turnRight()
   // ENA/ENB 핀을 통해 모터 활성화 및 속도 설정
   analogWrite(ENA, SPEED_MAX);
   analogWrite(ENB, SPEED_MAX);
-  delay(1000);
 }
 
 // Test Move (경우에 따라 수정하기)
 void loop() 
 {
   moveForward(); // 1초간 (좌)정회전, (우)정회전
+  delay(1000);
   stopMotors(); // 1초간 정지
+  delay(1000);
 
   moveBackward(); // 1초간 (좌)역회전, (우)역회전
+  delay(2000);
   stopMotors(); // 1초간 정지
+  delay(1000);
 
   turnLeft(); // 1초간 (좌)정회전, (우)역회전
-  stopMotors(); // 1초간 정지
+  delay(3000);
+  stopMotors(); // 1초간 정지'
+  delay(1000);
 
   turnRight(); // 1초간 (좌)역회전, (우)정회전
+  delay(4000);
   stopMotors(); // 1초간 정지
+  delay(1000);
 }
