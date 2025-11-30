@@ -1,4 +1,5 @@
-// 현재 구동: 초음파, 서보, DC 모터 - 라인트래킹, 카메라는 아직 미구현
+// 현재 구동: 초음파, 서보, DC 모터, 라인트래킹 
+// 미구현: 카메라-딥러닝 통신
 
 // 서보 모터
 #include "Servo.h"
@@ -14,6 +15,11 @@ Servo servo1;
 #define ENB 11
 #define IN3 13
 #define IN4 12
+
+// 적외선(라인트래킹) 센서
+#define SENSOR1 8 // 좌측
+#define SENSOR2 9 // 중앙
+#define SENSOR3 10 // 우측
 
 // 초음파 센서
 #define TRIG 7
@@ -36,17 +42,21 @@ void setup()
   pinMode(IN3, OUTPUT);
   pinMode(IN4, OUTPUT);
 
+  pinMode(TRIG, OUTPUT);
+  pinMode(ECHO, INPUT);
+
+  pinMode(SENSOR1, INPUT);
+  pinMode(SENSOR2, INPUT);
+  pinMode(SENSOR3, INPUT);
+
   servo1.attach(servo_motor);
   servo1.write(90);
   delay(100);
-
-  pinMode(TRIG, OUTPUT);
-  pinMode(ECHO, INPUT);
 }
 
 long getDistance()
 {
-  float duration = 0; // 초음파가 갔다가 돌아오는 시간을 저장
+  long duration = 0; // 초음파가 갔다가 돌아오는 시간을 저장
   float distance = 0; // 센서-물체 사이 거리를 저장
 
   digitalWrite(TRIG, LOW); // TRIG HIGH,LOW 상태초기화
@@ -58,8 +68,8 @@ long getDistance()
   digitalWrite(TRIG, LOW);
   duration = pulseIn(ECHO, HIGH); // ECHO가 HIGH->LOW 되는 시간 저장
   
-  distance = duration * 343 / 20000;
-  return distance;
+  distance = duration * 343.0 / 20000.0;
+  return (long)distance;
 }
 
 void moveForward()
@@ -137,9 +147,60 @@ void turnRight()
   analogWrite(ENB, SPEED_MAX);
 }
 
+// 자세 제어 함수
+void leftSensorWarning()
+{
+  Serial.println("자동차가 좌측 실선을 밟았습니다. 정상 경로 복구를 시도합니다.");
+  stopMotors();
+  delay(100);
+
+  turnRight();
+  delay(100);
+  stopMotors();
+  delay(50);
+
+  moveForward();
+  delay(500);
+  stopMotors();
+  delay(50);
+
+  turnLeft();
+  delay(80);
+  stopMotors();
+  delay(50);
+
+  Serial.println("복구 로직 실행을 완료하였습니다. 경로 주행을 재개합니다.");
+}
+
+void rightSensorWarning()
+{
+  Serial.println("자동차가 우측 실선을 밟았습니다. 정상 경로 복구를 시도합니다.");
+  stopMotors();
+  delay(100);
+
+  turnLeft();
+  delay(100);
+  stopMotors();
+  delay(50);
+
+  moveForward();
+  delay(500);
+  stopMotors();
+  delay(50);
+
+  turnRight();
+  delay(80);
+  stopMotors();
+  delay(50);
+
+  Serial.println("복구 로직 실행을 완료하였습니다. 경로 주행을 재개합니다.");
+}
+
 void loop()
 {
-  moveForward();
+  int s1 = digitalRead(SENSOR1); // 좌측 센서 라인 감지 (흑: 0, 백: 1)
+  int s2 = digitalRead(SENSOR2); // 중앙 센서 라인 감지 (흑: 0, 백: 1)
+  int s3 = digitalRead(SENSOR3); // 우측 센서 라인 감지 (흑: 0, 백: 1)
 
   long distance = getDistance();
   Serial.print("Distance: ");
@@ -156,6 +217,23 @@ void loop()
     turnLeft();
     delay(TURN_TIME);
     stopMotors();
-    delay(2000);
+    delay(500);
+
+    return;
   }
+
+  if (s1 == LOW && s3 == HIGH) // 자동차가 왼쪽 실선에 닿았을 때
+  {
+    leftSensorWarning();
+  }
+  else if (s3 == LOW && s1 == HIGH) // 자동차가 오른쪽 실선에 닿았을 때
+  {
+    rightSensorWarning();
+  }
+  else // 기타 정상 상태일 때
+  {
+    moveForward();
+  }
+
+  delay(10);
 }
