@@ -16,9 +16,9 @@ Servo servo1;
 #define IN4 12
 
 // 적외선(라인트래킹) 센서
-#define SENSOR1 8 // 좌측
+#define SENSOR1 10 // 좌측
 #define SENSOR2 9 // 중앙
-#define SENSOR3 10 // 우측
+#define SENSOR3 8 // 우측
 
 // 초음파 센서
 #define TRIG 7
@@ -28,7 +28,7 @@ Servo servo1;
 #define SPEED_MAX 255
 #define DISTANCE_CAM_START 25
 #define DISTANCE_THRESHOLD 12
-#define TURN_TIME 550
+#define TURN_TIME 700
 #define CAM 5
 
 bool decisionMode = false;
@@ -158,22 +158,17 @@ void leftSensorWarning()
 {
   Serial.println("자동차가 좌측 실선을 밟았습니다. 정상 경로 복구를 시도합니다.");
   stopMotors();
-  delay(100);
+  delay(2000);
+
+  moveBackward();
+  delay(200);
+  stopMotors();
+  delay(2000);
 
   turnRight();
-  delay(100);
+  delay(250);
   stopMotors();
-  delay(50);
-
-  moveForward();
-  delay(500);
-  stopMotors();
-  delay(50);
-
-  turnLeft();
-  delay(80);
-  stopMotors();
-  delay(50);
+  delay(2000);
 
   Serial.println("복구 로직 실행을 완료하였습니다. 경로 주행을 재개합니다.");
 }
@@ -182,22 +177,17 @@ void rightSensorWarning()
 {
   Serial.println("자동차가 우측 실선을 밟았습니다. 정상 경로 복구를 시도합니다.");
   stopMotors();
-  delay(100);
+  delay(2000);
+
+  moveBackward();
+  delay(200);
+  stopMotors();
+  delay(2000);
 
   turnLeft();
-  delay(100);
+  delay(250);
   stopMotors();
-  delay(100);
-
-  moveForward();
-  delay(500);
-  stopMotors();
-  delay(100);
-
-  turnRight();
-  delay(80);
-  stopMotors();
-  delay(100);
+  delay(2000);
 
   Serial.println("복구 로직 실행을 완료하였습니다. 경로 주행을 재개합니다.");
 }

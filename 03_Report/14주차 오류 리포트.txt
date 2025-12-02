@@ -1,0 +1,112 @@
+14주차 오류 리포트
+
+12/02(화)
+
+트랙 제작, 모터 고정, 카메라 고정
+라인트래킹 관련 로직 수정
+(전) 실선을 밟으면 핸들을 약간만 틀어서 경로 가운데로 복구하게 조정
+(후) 실선을 밟으면 후진을 통해 정상 경로로 복구한 후 회전하여 정상 경로로 복구
+
+
+(before)
+// 자세 제어 함수
+void leftSensorWarning()
+{
+  Serial.println("자동차가 좌측 실선을 밟았습니다. 정상 경로 복구를 시도합니다.");
+  stopMotors();
+  delay(100);
+
+  turnRight();
+  delay(100);
+  stopMotors();
+  delay(50);
+
+  moveForward();
+  delay(500);
+  stopMotors();
+  delay(50);
+
+  turnLeft();
+  delay(80);
+  stopMotors();
+  delay(50);
+
+  Serial.println("복구 로직 실행을 완료하였습니다. 경로 주행을 재개합니다.");
+}
+
+void rightSensorWarning()
+{
+  Serial.println("자동차가 우측 실선을 밟았습니다. 정상 경로 복구를 시도합니다.");
+  stopMotors();
+  delay(100);
+
+  turnLeft();
+  delay(100);
+  stopMotors();
+  delay(50);
+
+  moveForward();
+  delay(500);
+  stopMotors();
+  delay(50);
+
+  turnRight();
+  delay(80);
+  stopMotors();
+  delay(50);
+
+  Serial.println("복구 로직 실행을 완료하였습니다. 경로 주행을 재개합니다.");
+}
+
+(after)
+// 자세 제어 함수
+void leftSensorWarning()
+{
+  Serial.println("자동차가 좌측 실선을 밟았습니다. 정상 경로 복구를 시도합니다.");
+  stopMotors();
+  delay(2000);
+
+  moveBackward();
+  delay(200);
+  stopMotors();
+  delay(2000);
+
+  turnRight();
+  delay(250);
+  stopMotors();
+  delay(2000);
+
+  Serial.println("복구 로직 실행을 완료하였습니다. 경로 주행을 재개합니다.");
+}
+
+void rightSensorWarning()
+{
+  Serial.println("자동차가 우측 실선을 밟았습니다. 정상 경로 복구를 시도합니다.");
+  stopMotors();
+  delay(2000);
+
+  moveBackward();
+  delay(200);
+  stopMotors();
+  delay(2000);
+
+  turnLeft();
+  delay(250);
+  stopMotors();
+  delay(2000);
+
+  Serial.println("복구 로직 실행을 완료하였습니다. 경로 주행을 재개합니다.");
+}
+
+<<코드 수정 사항>>
+자세 제어 과정에서 거리가 25cm 보다 심하게 짧아지면 (22cm 미만으로 가까워졌을 때) 
+backward해서 25cm로 복구
+-> 수정 후 그냥 파일에 명시
+
+<<카메라 포트 번호>>
+정면카메라는 1번
+USB 카메라는 0번
+
+딥러닝 관련하여 학습 횟수 조정할 필요 있음! (코드 수정 필요) 
+
+
