@@ -25,10 +25,11 @@ Servo servo1;
 #define ECHO 6
 
 // 기타 기호 상수 정의
-#define SPEED_MAX 255
-#define DISTANCE_CAM_START 25
-#define DISTANCE_THRESHOLD 12
-#define TURN_TIME 700
+#define SPEED_MAX 220
+#define DISTANCE_CAM_START 18
+#define DISTANCE_CAM_BOUNDARY 15
+#define DISTANCE_THRESHOLD 15
+#define TURN_TIME 1200
 #define CAM 5
 
 bool decisionMode = false;
@@ -36,8 +37,9 @@ char decidedDirection = 'N';
 
 void setup()
 {
-  Serial.begin(9600);
+  Serial.begin(9600); // 시리얼 통신 속도
 
+  // DC 모터
   pinMode(ENA, OUTPUT);
   pinMode(IN1, OUTPUT);
   pinMode(IN2, OUTPUT);
@@ -46,13 +48,16 @@ void setup()
   pinMode(IN3, OUTPUT);
   pinMode(IN4, OUTPUT);
 
+  // 초음파 센서
   pinMode(TRIG, OUTPUT);
   pinMode(ECHO, INPUT);
 
+  // 라인트래킹 센서(적외선)
   pinMode(SENSOR1, INPUT);
   pinMode(SENSOR2, INPUT);
   pinMode(SENSOR3, INPUT);
 
+  // 서보 모터
   servo1.attach(servo_motor);
   servo1.write(90);
   delay(100);
@@ -73,8 +78,8 @@ long getDistance()
   digitalWrite(TRIG, LOW);
   duration = pulseIn(ECHO, HIGH); // ECHO가 HIGH->LOW 되는 시간 저장
   
-  distance = duration * 343.0 / 20000.0;
-  return (long)distance;
+  distance = duration * 343.0 / 20000.0; // 측정한 시간을 cm 단위의 거리로 변환
+  return (long)distance; // 거리값을 반환
 }
 
 // 자동차 구동 함수
@@ -129,8 +134,8 @@ void turnLeft()
   digitalWrite(IN1, HIGH);
   digitalWrite(IN2, LOW);
 
-  // 좌측 모터 역회전
-  digitalWrite(IN3, LOW);
+  // 좌측 모터 정지
+  digitalWrite(IN3, HIGH);
   digitalWrite(IN4, HIGH);
 
   // 모터 활성화, 속도 설정
@@ -140,8 +145,8 @@ void turnLeft()
 
 void turnRight()
 {
-  // 우측 모터 역회전
-  digitalWrite(IN1, LOW);
+  // 우측 모터 정지
+  digitalWrite(IN1, HIGH);
   digitalWrite(IN2, HIGH);
 
   // 좌측 모터 정회전
@@ -153,63 +158,95 @@ void turnRight()
   analogWrite(ENB, SPEED_MAX);
 }
 
+void turnLeft_1()
+{
+  // 우측 모터 정회전
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW);
+
+  // 좌측 모터 역회전
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, HIGH);
+
+  // 모터 활성화, 속도 설정
+  analogWrite(ENA, SPEED_MAX);
+  analogWrite(ENB, SPEED_MAX);
+}
+
+void turnLeft_1()
+{
+  // 우측 모터 정회전
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW);
+
+  // 좌측 모터 역회전
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, HIGH);
+
+  // 모터 활성화, 속도 설정
+  analogWrite(ENA, SPEED_MAX);
+  analogWrite(ENB, SPEED_MAX);
+}
+
 // 자세 제어 함수
 void leftSensorWarning()
 {
   Serial.println("자동차가 좌측 실선을 밟았습니다. 정상 경로 복구를 시도합니다.");
   stopMotors();
-  delay(2000);
+  delay(500);
 
-  moveBackward();
-  delay(200);
-  stopMotors();
-  delay(2000);
+  moveBackward(); // 뒤로 후진
+  delay(300);
+  stopMotors(); 
+  delay(500);
 
-  turnRight();
-  delay(250);
+  turnRight_1(); // 제자리에서 오른쪽으로 회전 (정방향)
+  delay(450);
   stopMotors();
-  delay(2000);
+  delay(500);
 
   Serial.println("복구 로직 실행을 완료하였습니다. 경로 주행을 재개합니다.");
+  moveForward();
 }
 
 void rightSensorWarning()
 {
   Serial.println("자동차가 우측 실선을 밟았습니다. 정상 경로 복구를 시도합니다.");
   stopMotors();
-  delay(2000);
+  delay(500);
 
-  moveBackward();
-  delay(200);
-  stopMotors();
-  delay(2000);
+  moveBackward(); // 뒤로 후진
+  delay(300);
+  stopMotors(); // 제자리에서 왼쪽으로 회전 (정방향)
+  delay(500);
 
-  turnLeft();
-  delay(250);
+  turnLeft_1();
+  delay(450);
   stopMotors();
-  delay(2000);
+  delay(500);
 
   Serial.println("복구 로직 실행을 완료하였습니다. 경로 주행을 재개합니다.");
+  moveForward();
 }
 
 char requestOneSample()
 {
-  Serial.println("SNAP");
-  unsigned long startTime= millis();
-  while (Serial.available() == 0)
+  Serial.println("SNAP"); // 문자열 출력 -> Python이 캡처를 하도록 신호 보냄
+  unsigned long startTime= millis(); // 현재 시간을 밀리초 단위로 기록
+  while (Serial.available() == 0) // 데이터 수신이 되지 않고
   {
-    if (millis() - startTime > 3000)
+    if (millis() - startTime > 3000) // 이것이 3초 동안 지속될 때
     {
-      return 'N';
+      return 'N'; // N(negative) 반환 (예외)
     }
   }
-  char cmd = Serial.read();
-  while (Serial.available() > 0)
+  char cmd = Serial.read(); // 데이터가 도착하면 시리얼 버퍼에서 첫번째 문자를 읽어 변수에 저장
+  while (Serial.available() > 0) 
   {
-    Serial.read();
+    Serial.read(); // 한 번 더 읽음 (저장할 변수가 없으므로 버퍼가 비워짐)
   }
 
-  return cmd;
+  return cmd; // cmd에 저장된 신호(L/R/N) 반환
 }
 
 char makeCameraDecision()
@@ -222,14 +259,14 @@ char makeCameraDecision()
   // 1단계: 5회 샘플링
   for (int i=0 ; i<CAM ; i++)
   {
-    char result = requestOneSample();
-    if (result == 'L')
+    char result = requestOneSample(); // Python으로부터 받은 시그널 입력
+    if (result == 'L') // 받은 시그널이 Left이면
     {
-      leftCount++;
+      leftCount++; // 왼쪽 카운트 1 증가
     }
-    else if (result == 'R')
+    else if (result == 'R') // 받은 시그널이 Right이면
     {
-      rightCount++;
+      rightCount++; // 오른쪽 카운트 1 증가
     }
     delay(50);
   }
@@ -300,24 +337,47 @@ void loop()
     // 변수 초기화
     decisionMode = false;
     decidedDirection = 'N';
-
-    return; // 반복문 처음으로 돌아감
   }
 
-  // 두 번째 경우: 카메라 판단 전, 길이가 25cm 이하일 때 -> 카메라 기능 수행
+  // 두 번째 경우: 카메라 판단 전, 길이가 21cm 이하일 때 -> 카메라 기능 수행
   if (!decisionMode && distance > 0 && distance <= DISTANCE_CAM_START)
   {
     stopMotors();
     delay(300);
 
-    decidedDirection = makeCameraDecision();
-    decisionMode = true; // 판단 완료 신호
+    long distance_before_cam = getDistance(); 
+    Serial.print("판단 전 재측정 거리: ");
+    Serial.println(distance_before_cam);
+    delay(300);
 
-    moveForward();
-    return; // 반복문 처음으로 돌아감
+    if (distance_before_cam > DISTANCE_CAM_START) // (1) 너무 멀 때 (21cm 초과)
+    {
+        Serial.println("거리가 너무 멀어 직진을 재개합니다.");
+        moveForward();
+    }
+
+    else if (distance_before_cam <= DISTANCE_CAM_BOUNDARY) // (2) 너무 가까울 때 (18cm 이하)
+    {
+        // 정지했으나 너무 가깝다면 후진하여 거리를 벌립니다.
+        Serial.println("거리가 너무 가까워 후진하여 거리를 벌립니다.");
+        moveBackward();
+        delay(100); // 잠시 후진
+        stopMotors();
+        // 후진 후 다시 루프 처음으로 돌아가 새로운 거리 측정 및 판단을 시도
+    }
+
+    else // (3) 최적 인식 구간일 때 
+    {
+        Serial.println("최적 인식 구간입니다. 카메라 판단을 수행합니다.");
+        
+        decidedDirection = makeCameraDecision();
+        decisionMode = true; // 판단 완료 신호
+
+        moveForward(); // 판단 후 주행 재개
+    }
   }
 
-  // 나머지 일반적인 경우: 라인트래킹 및 직전
+  // 나머지 일반적인 경우: 라인트래킹 및 직진
   if (s1 == LOW && s3 == HIGH) // 자동차가 왼쪽 실선에 닿았을 때
   {
     leftSensorWarning();
@@ -331,5 +391,4 @@ void loop()
     moveForward();
   }
 
-  delay(10);
 }

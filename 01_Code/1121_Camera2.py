@@ -5,10 +5,10 @@ from keras import models
 import os
 import tensorflow as tf
 
-keras_model_path = "tf_mnist_model2.h5"
+keras_model_path = "tf_mnist_model (2).h5"
 model = models.load_model(keras_model_path)
 
-video = cv2.VideoCapture(2)
+video = cv2.VideoCapture(0)
 
 while True:
     _, frame = video.read()
