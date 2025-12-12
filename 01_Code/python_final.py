@@ -30,7 +30,7 @@ except serial.SerialException as e:
     print(f"시리얼 포트 연결 오류: {e}")
     os._exit(0)
 
-count = 5 # 이 값은 버퍼 비우기에만 사용됩니다.
+count = 5 # 이 값은 버퍼 비우기에만 사용
 
 # --- 숫자 입력 함수 ---
 def input_digits(direction_name):
@@ -62,8 +62,7 @@ R_LIST = input_digits("우회전")
 print(f" 우회전 숫자: {R_LIST}")
 print("\n설정 완료! 아두이노 명령 대기 중...\n")
 
-# --- 추가된 제한 숫자 리스트 ---
-# 1 / 3 / 5 / 7 / 8 / 9 중에서만 판단
+# --- 제한 숫자 리스트 ---
 ALLOWED_DIGITS = [1, 3, 5, 7, 8, 9] 
 SAMPLE_COUNT = 10 # 10회 샘플링
 SCORE_WEIGHTS = [3, 2, 1] # 1순위 3점, 2순위 2점, 3순위 1점
@@ -99,7 +98,7 @@ while True:
         print("프레임을 읽을 수 없습니다.")
         break
         
-    # 2. 시리얼 통신 확인 및 'SNAP' 명령 처리
+    # 시리얼 통신 확인 및 'SNAP' 명령 처리
     if py_serial.readable():
         response = py_serial.readline()
         if response:
